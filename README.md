@@ -88,7 +88,7 @@ The claim sequence:
 You'll need Docker and JDK 21.
 
 ```bash
-git clone <this-repo>
+git clone git@github.com:singhbhupinder55/Event-Booking-And-Payment-Processing-System.git
 cd event-booking
 gradle wrapper --gradle-version 8.10   # one time, generates ./gradlew
 
@@ -167,4 +167,6 @@ Webhook signature verification is tested with hand constructed valid and forged 
 
 ## What's intentionally out of scope
 
-No microservices. A clean monolith is the right scope here, and splitting this into services would be solving a problem that doesn't exist yet. No Kafka or event sourcing either. The audit log already answers "what happened," and adding an event bus on top would be architecture for its own sake. No frontend, since this is a backend focused portfolio piece and the curl examples above plus the test suite are the interface. No live hosted deployment yet either. The priority was getting the correctness story right first, and deployment is a separate decision to make once the system itself is done.
+I kept this as a clean monolith on purpose. Splitting it into microservices would mean solving a scaling problem that doesn't actually exist yet, just for the sake of having more boxes in a diagram. Same reasoning for Kafka or event sourcing. The audit log already answers "what happened and when," so layering an event bus on top of that wouldn't add real value here, it would just be architecture for its own sake.
+There's no frontend either. This is meant as a backend focused piece, so the curl examples and the test suite serve as the interface for now.
+I also haven't deployed this anywhere live yet. Getting the core correctness guarantees right (the concurrency handling, the idempotency, the payment flow) came first. Hosting is a separate decision I'll make once I'm confident the system itself is solid, not something to rush just to have a link.
