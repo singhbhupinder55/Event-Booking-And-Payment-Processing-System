@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: event-booking
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/event_booking?createDatabaseIfNotExist=true
+    username: ${DB_USERNAME:event_booking}
+    password: ${DB_PASSWORD:event_booking}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate   # schema is owned by Flyway, not Hibernate — Hibernate must never auto-create/alter tables
+    open-in-view: false    # avoid lazy-loading surprises outside the service layer transaction boundary
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+stripe:
+  api-key: ${STRIPE_SECRET_KEY:sk_test_placeholder}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:whsec_placeholder}
+
+booking:
+  reservation-window-minutes: 10
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{correlationId:--}] %-5level %logger{36} - %msg%n"

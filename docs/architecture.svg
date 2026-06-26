@@ -1,0 +1,95 @@
+<svg width="680" height="900" viewBox="0 0 680 900" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Event booking and payment system architecture</title>
+<desc>Flow diagram showing a client booking request flowing through idempotency check, pessimistic row lock, booking creation, Stripe PaymentIntent creation, and Stripe webhook confirmation, with audit logging and a separate expiry sweep path.</desc>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#444441" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<rect width="680" height="900" fill="#ffffff"/>
+
+<g>
+  <rect x="250" y="20" width="180" height="44" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"/>
+  <text x="340" y="42" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#2C2C2A">Client</text>
+</g>
+<line x1="340" y1="64" x2="340" y2="100" stroke="#444441" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="360" y="86" font-family="sans-serif" font-size="12" fill="#5F5E5A">POST /bookings</text>
+
+<g>
+  <rect x="220" y="100" width="240" height="56" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+  <text x="340" y="118" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#042C53">Idempotency check</text>
+  <text x="340" y="136" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#185FA5">Key + path + request hash</text>
+</g>
+<line x1="340" y1="156" x2="340" y2="192" stroke="#444441" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="356" y="178" font-family="sans-serif" font-size="12" fill="#5F5E5A">new request</text>
+
+<g>
+  <rect x="190" y="192" width="300" height="56" rx="8" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+  <text x="340" y="210" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#4A1B0C">SELECT ... FOR UPDATE on event</text>
+  <text x="340" y="228" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#993C1D">Pessimistic lock, serializes seat writes</text>
+</g>
+<line x1="340" y1="248" x2="340" y2="284" stroke="#444441" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<g>
+  <rect x="200" y="284" width="280" height="56" rx="8" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+  <text x="340" y="302" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#4A1B0C">Create booking, decrement seats</text>
+  <text x="340" y="320" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#993C1D">One transaction, status = PENDING</text>
+</g>
+
+<line x1="480" y1="312" x2="560" y2="312" stroke="#444441" stroke-width="1.5" marker-end="url(#arrow)"/>
+<g>
+  <rect x="560" y="284" width="100" height="56" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"/>
+  <text x="610" y="302" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#2C2C2A">Audit log</text>
+  <text x="610" y="320" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#5F5E5A">Append-only</text>
+</g>
+
+<line x1="340" y1="340" x2="340" y2="376" stroke="#444441" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<g>
+  <rect x="200" y="376" width="280" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+  <text x="340" y="394" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#26215C">Create Stripe PaymentIntent</text>
+  <text x="340" y="412" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#534AB7">Authorize, metadata = bookingId</text>
+</g>
+<line x1="340" y1="432" x2="340" y2="468" stroke="#444441" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="356" y="454" font-family="sans-serif" font-size="12" fill="#5F5E5A">client confirms payment</text>
+
+<g>
+  <rect x="180" y="468" width="320" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+  <text x="340" y="486" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#26215C">Stripe sends webhook event</text>
+  <text x="340" y="504" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#534AB7">payment_intent.succeeded / failed</text>
+</g>
+<line x1="340" y1="524" x2="340" y2="560" stroke="#444441" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<g>
+  <rect x="200" y="560" width="280" height="56" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+  <text x="340" y="578" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#042C53">Verify signature, dedupe event ID</text>
+  <text x="340" y="596" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#185FA5">HMAC-SHA256, processed_stripe_events</text>
+</g>
+<line x1="340" y1="616" x2="340" y2="652" stroke="#444441" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<g>
+  <rect x="190" y="652" width="300" height="56" rx="8" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+  <text x="340" y="670" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#4A1B0C">Booking confirmed or cancelled</text>
+  <text x="340" y="688" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#993C1D">Webhook is the source of truth</text>
+</g>
+
+<line x1="480" y1="680" x2="560" y2="680" stroke="#444441" stroke-width="1.5" marker-end="url(#arrow)"/>
+<g>
+  <rect x="560" y="652" width="100" height="56" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"/>
+  <text x="610" y="670" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#2C2C2A">Audit log</text>
+  <text x="610" y="688" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#5F5E5A">Append-only</text>
+</g>
+
+<rect x="40" y="760" width="600" height="120" rx="14" fill="none" stroke="#888780" stroke-width="0.5" opacity="0.6"/>
+<text x="60" y="782" font-family="sans-serif" font-size="12" fill="#5F5E5A">Independent path</text>
+
+<g>
+  <rect x="80" y="796" width="220" height="56" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+  <text x="190" y="814" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#412402">Scheduled sweep, every 60s</text>
+  <text x="190" y="832" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#854F0B">Finds PENDING past window</text>
+</g>
+<line x1="300" y1="824" x2="380" y2="824" stroke="#444441" stroke-width="1.5" marker-end="url(#arrow)"/>
+<g>
+  <rect x="380" y="796" width="220" height="56" rx="8" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"/>
+  <text x="490" y="814" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="14" font-weight="500" fill="#4A1B0C">Release seats, mark EXPIRED</text>
+  <text x="490" y="832" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#993C1D">Same lock path as booking</text>
+</g>
+</svg>
