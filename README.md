@@ -1,7 +1,5 @@
 # Event Booking & Payment System
 
-[![CI](https://github.com/singhbhupinder55/event-booking-payments/actions/workflows/ci.yml/badge.svg)](https://github.com/singhbhupinder55/event-booking-payments/actions/workflows/ci.yml)
-
 A backend payments system built to demonstrate the same correctness, concurrency, and auditability problems a real fintech payments team deals with. This isn't a CRUD tutorial with Stripe bolted on top.
 
 **The headline result:** 100 concurrent requests racing for the last 10 seats on an event. Exactly 10 succeed. 90 are cleanly rejected. No overselling, no deadlocks. Verified against a real MySQL instance, not mocked.
@@ -90,7 +88,7 @@ The claim sequence:
 You'll need Docker and JDK 21.
 
 ```bash
-git clone <this-repo>
+git clone git@github.com:singhbhupinder55/Event-Booking-And-Payment-Processing-System.git
 cd event-booking
 gradle wrapper --gradle-version 8.10   # one time, generates ./gradlew
 
